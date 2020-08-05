@@ -13,11 +13,10 @@ egen Study_ID =group(APA)
 *############################################################################### 
 *DROP IRRELEVANT COLUMNS & OBSERVATIONS 
 *############################################################################### 
-drop AD AE AF AG AH AI AJ ReversecodedN Notes Order Descriptionofm SecondReviewer Reviewer StudyNo IncludedinRAND Composite Outcomemeasure Outcomedescri OutcomecategoryCognitiveE WebsiteSubcategory  SelfReport
+drop AD AE AF AG AH AI AJ ReversecodedN Notes Order Descriptionofm SecondReviewer Reviewer StudyNo IncludedinRAND Composite Outcomemeasure Outcomedescri OutcomecategoryCognitiveE  SelfReport
 
 drop if Grade=="Mixed"
-drop if  TypeofMeasure=="Physiological Test"  
-
+drop if TxN== "unknown"
 *############################################################################### 
 *CLEAN MOOSES
 *############################################################################### 
@@ -41,6 +40,7 @@ replace Grade="1" if Grade=="Primary"
 replace Grade="2" if Grade=="Middle"
 replace Grade="3" if Grade=="High" 
 
+replace WebsiteCategor="Emotional Well-being" if WebsiteCategor=="Unsure"
 *############################################################################### 
 *ASSIGN VARIABLES
 *############################################################################### 
@@ -53,19 +53,28 @@ replace MOOSES_Rating_4=1 if MOOSES=="4"
 gen MOOSES_Rating_5 =0
 replace MOOSES_Rating_5=1 if MOOSES=="5"
 
-count if MOOSES_Rating_3
-drop MOOSES_Rating_3
-drop if MOOSES=="3"
-*ONLY TWO MOOSES RATINGS 3, SO DROPPED
 
 gen Student_report=0
 replace Student_report=1 if TypeofMeasure=="student-report" | TypeofMeasure=="student self-report" | TypeofMeasure=="student self report" | TypeofMeasure=="student report" | TypeofMeasure=="Student self-report" | TypeofMeasure=="Self-report"
 
-gen Other_report=0
-replace Other_report=1 if TypeofMeasure=="parent-report" | TypeofMeasure=="parent self-report" | TypeofMeasure=="parent report" | TypeofMeasure=="Parent self-report" | TypeofMeasure=="parental report" | TypeofMeasure=="parent-report" | TypeofMeasure=="peer-report" | TypeofMeasure=="peer report" | TypeofMeasure=="teacher-report" | TypeofMeasure=="teacher report" | TypeofMeasure== "teaher report" | TypeofMeasure== "teacher self-report" | TypeofMeasure=="Teacher self-report" | TypeofMeasure=="Teacher self report" | TypeofMeasure=="teacher self report" | TypeofMeasure=="teacher/parent report"
+gen Parent_report=0
+replace Parent_report=1 if TypeofMeasure=="parent-report" | TypeofMeasure=="parent self-report" | TypeofMeasure=="parent report" | TypeofMeasure=="Parent self-report" | TypeofMeasure=="parental report" | TypeofMeasure=="parent-report" 
+
+gen Peer_report=0
+replace Peer_report=1 if TypeofMeasure=="peer-report" | TypeofMeasure=="peer report" 
+
+gen Teacher_report=0
+replace Teacher_report=1 if TypeofMeasure=="teacher-report" | TypeofMeasure=="teacher report" | TypeofMeasure== "teaher report" | TypeofMeasure== "teacher self-report" | TypeofMeasure=="Teacher self-report" | TypeofMeasure=="Teacher self report" | TypeofMeasure=="teacher self report" | TypeofMeasure=="teacher/parent report"
 
 gen Standardized_assessment=0
-replace Standardized_assessment=1 if TypeofMeasure=="assessment" | TypeofMeasure=="standardized assessment" | TypeofMeasure=="Standardized assessment" | TypeofMeasure=="Standardized test" | TypeofMeasure=="Assessment" | TypeofMeasure=="Standardized assessment" | TypeofMeasure=="observer-report" | TypeofMeasure=="official report" | TypeofMeasure== "observation" | TypeofMeasure=="observation" | TypeofMeasure=="observer-report" | TypeofMeasure=="outside consultant" | TypeofMeasure=="Observation" | TypeofMeasure=="official report" | TypeofMeasure=="school_record" | TypeofMeasure=="school records" | TypeofMeasure=="arrest records" | TypeofMeasure=="school record" 
+replace Standardized_assessment=1 if TypeofMeasure=="assessment" | TypeofMeasure=="standardized assessment" | TypeofMeasure=="Standardized assessment" | TypeofMeasure=="Standardized test" | TypeofMeasure=="Assessment" | TypeofMeasure=="Standardized assessment"  | TypeofMeasure=="official report" |  | TypeofMeasure=="official report" | | TypeofMeasure=="Physiological test"
+drop if Standardized_assessment==1
+
+gen School_record=0
+replace School_record=1 if TypeofMeasure=="school_record" | TypeofMeasure=="school records" | TypeofMeasure=="arrest records" | TypeofMeasure=="school record" 
+
+gen Observation=0
+replace Observation=1 if TypeofMeasure=="observer-report" | TypeofMeasure== "observation" | TypeofMeasure=="observation" | TypeofMeasure=="observer-report" | TypeofMeasure=="outside consultant" | TypeofMeasure=="Observation"
 
 *############################################################################### 
 *CREATE DUMMY VARIABLES
@@ -85,16 +94,17 @@ replace Middle=1 if Grade=="2"
 gen High=0
 replace High=1 if Grade=="3"
 
-gen Significant_n=0 
-replace Significant_n=1 if Significant=="Yes" | Significant=="yes" | Significant=="Y" 
-drop Significant
-rename Significant_n Significant
-drop if Significant==0
-
-replace TypeofMeasure="1" if Other_report==1
+replace TypeofMeasure="1" if Peer_report==1
 replace TypeofMeasure="2" if Student_report==1
-replace TypeofMeasure="3" if Standardized_assessment==1
+replace TypeofMeasure="3" if Teacher_report==1
+replace TypeofMeasure="4" if School_record==1
+replace TypeofMeasure="5" if Parent_report==1
+replace TypeofMeasure="6" if Observation==1
+
+
+
 * CANNOT CONTROL FOR RANDOMIZATION BECAUSE NOT CODED
+
 
 *############################################################################### 
 *DESTRING VARIABLES 
@@ -132,6 +142,7 @@ rename Grade_n Grade
 destring TypeofMeasure, gen(TypeofMeasure_n)
 drop TypeofMeasure
 rename TypeofMeasure_n TypeofMeasure
+
 *############################################################################### 
 *CENTERING VARIABLES
 *############################################################################### 
@@ -140,7 +151,7 @@ gen MOOSES_Rating_4_c=MOOSES_Rating_4 - r(mean)
 
 sum MOOSES_Rating_5
 gen MOOSES_Rating_5_c=MOOSES_Rating_5 - r(mean)
-
+*/
 sum Targeted
 gen Targeted_c=Targeted- r(mean)
 
@@ -153,16 +164,23 @@ gen Middle_c=Middle- r(mean)
 sum High
 gen High_c=High- r(mean)
 
-
 sum Student_report
 gen Student_report_c=Student_report - r(mean) 
 
-sum Other_report
-gen Other_report_c=Other_report - r(mean) 
+sum Peer_report
+gen Peer_report_c=Peer_report - r(mean) 
 
-sum Standardized_assessment
-gen Standardized_assessment_c=Standardized_assessment - r(mean)
+sum Teacher_report
+gen Teacher_report_c=Teacher_report - r(mean)
 
+sum Parent_report
+gen Parent_report_c=Parent_report - r(mean)
+
+sum Observation
+gen Observation_c=Observation - r(mean)
+
+sum School_record
+gen School_record_c=School_record - r(mean)
 *############################################################################### 
 *TOTAL SAMPLE SIZES
 *############################################################################### 
@@ -227,62 +245,31 @@ drop TxN_squared Tx_m Tx_Cluster_summation Tx_m_df TxN_adjust ControlN_squared C
 *############################################################################### 
 *DESCRIPTIVE STATISTICS
 *############################################################################### 
-count if WebsiteCategor=="Academic" & Student_report==1
-count if WebsiteCategor=="Emotional Well-being" & Student_report==1
-count if WebsiteCategor=="Social Relationships" & Student_report==1
-count if WebsiteCategor=="Problem Behaviors" & Student_report==1
+count if Uni=="teachers"
+count if Unit=="schools" | Unit=="school"
+count if Unit=="" | Unit=="student"
+count if Unit=="counselors"
+count if Unit=="classes" | Unit=="classrooms" | Unit=="classroom"
 
-count if WebsiteCategor=="Academic" & Other_report==1
-count if WebsiteCategor=="Emotional Well-being" & Other_report==1
-count if WebsiteCategor=="Social Relationships" & Other_report==1
-count if WebsiteCategor=="Problem Behaviors" & Other_report==1
-
-count if WebsiteCategor=="Academic" & Standardized_assessment==1
-count if WebsiteCategor=="Emotional Well-being" & Standardized_assessment==1
-count if WebsiteCategor=="Social Relationships" & Standardized_assessment==1
-count if WebsiteCategor=="Problem Behaviors" & Standardized_assessment==1
-
-count if WebsiteCategor=="Academic" & Targeted==1
-count if WebsiteCategor=="Emotional Well-being" & Targeted==1
-count if WebsiteCategor=="Social Relationships" & Targeted==1
-count if WebsiteCategor=="Problem Behaviors" & Targeted==1
-
-count if WebsiteCategor=="Academic" & Targeted==0
-count if WebsiteCategor=="Emotional Well-being" & Targeted==0
-count if WebsiteCategor=="Social Relationships" & Targeted==0
-count if WebsiteCategor=="Problem Behaviors" & Targeted==0
-
-count if WebsiteCategor=="Academic" & Grade==1
-count if WebsiteCategor=="Emotional Well-being" & Grade==1
-count if WebsiteCategor=="Social Relationships" & Grade==1
-count if WebsiteCategor=="Problem Behaviors" & Grade==1
-
-count if WebsiteCategor=="Academic" & Grade==2
-count if WebsiteCategor=="Emotional Well-being" & Grade==2
-count if WebsiteCategor=="Social Relationships" & Grade==2
-count if WebsiteCategor=="Problem Behaviors" & Grade==2
-
-count if WebsiteCategor=="Academic" & Grade==3
-count if WebsiteCategor=="Emotional Well-being" & Grade==3
-count if WebsiteCategor=="Social Relationships" & Grade==3
-count if WebsiteCategor=="Problem Behaviors" & Grade==3
 *############################################################################### 
 *CREATE FOUR MODELS
 *############################################################################### 
+drop if variance==.
 /*
-save "C:\Users\clair\Downloads\Survey_Analysis.dta"
+save "C:\Users\clair\Downloads\Survey_Analysis_V1.dta"
 
 keep if WebsiteCategor=="Academic"
-save "C:\Users\clair\Downloads\Survey_Analysis_academic.dta"
+save "C:\Users\clair\Downloads\Survey_Analysis_Academic_V1.dta"
 
 keep if WebsiteCategor=="Social Relationships"
-save "C:\Users\clair\Downloads\Survey_Analysis_social.dta"
+save "C:\Users\clair\Downloads\Survey_Analysis_Social_V1.dta"
 
 keep if WebsiteCategor=="Emotional Well-being"
-save "C:\Users\clair\Downloads\Survey_Analysis_emotional.dta"
+save "C:\Users\clair\Downloads\Survey_Analysis_Emotional_V1.dta"
 */
 keep if WebsiteCategor=="Problem Behaviors"
-save "C:\Users\clair\Downloads\Survey_Analysis_problem.dta"
+save "C:\Users\clair\Downloads\Survey_Analysis_Problem_V1.dta"
+
 
 *############################################################################### 
 *CREATE TABLES - CHANGE WITHIN DOC

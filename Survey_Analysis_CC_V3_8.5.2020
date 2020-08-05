@@ -12,24 +12,24 @@ output:
 ##Load Full Data
 ##############################################################################
 library(haven)
-full <- read_dta("C:/Users/clair/Downloads/Survey_Analysis.dta")
-View(full)
+full <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_V1.dta")
+View(full) 
 
 ##Load Academic Data
 library(haven)
-full_academic <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_academic.dta")
+full_academic <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Academic_V1.dta")
 View(full_academic)
 
 ##Load Emotional Well-Being Data
-full_emotional <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_emotional.dta")
+full_emotional <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Emotional_V1.dta")
 View(full_emotional)
 
 ##Load Social Relationships Data
-full_social <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_social.dta")
+full_social <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Social_V1.dta")
 View(full_social)
 
 ##Load Problem Behaviors Data
-full_problem <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_problem.dta")
+full_problem <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Problem_V1.dta")
 View(full_problem)
 ```
 
@@ -168,6 +168,8 @@ MVnull.coef_problem
 # Metaregression -- Academic Model
 #################################################################################
 
+#Research Question: Are academic outcomes significantly different for MOOSES
+
 ## Instructions for this section: 
 # 1. Marginal Means: Unhashtag lines 178-181 one at a time,concurrent with unhashtag of lines 184-185.
 # 2. Meta-Regression: Unhashtag line 189, concurrent with unhashtag of lines 192-193. 
@@ -178,15 +180,14 @@ MVnull.coef_problem
 #terms_1 <- c("as.factor(Targeted)")
 #terms_1 <- c("as.factor(MOOSES)")
 #terms_1 <- c("as.factor(Grade)")
-#terms_1 <- c("as.factor(TypeofMeasure)")
-           
+
 # format moderators into formula (an R-specifc type)
 #formula_academic <- reformulate(termlabels = c(terms_1, "-1"))
 #formula_academic
 
 ## Meta-Regression
 # save list of moderators to include
-terms_1 <- c("Targeted_c", "Middle_c", "High_c", "Other_report_c", "Standardized_assessment_c", "MOOSES_Rating_5_c")
+terms_1 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
 
 # format moderators into formula (an R-specifc type)
 formula_academic <- reformulate(termlabels = c(terms_1))
@@ -244,19 +245,18 @@ MVfull.coef_academic
 # save list of moderators to include - 
 #terms_2 <- c("as.factor(Targeted)")
 #terms_2 <- c("as.factor(Grade)")
-terms_2 <- c("as.factor(TypeofMeasure)")
-           
+
 # format moderators into formula (an R-specifc type)
-formula_emotional <- reformulate(termlabels = c(terms_2, "-1"))
-formula_emotional
+#formula_emotional <- reformulate(termlabels = c(terms_2, "-1"))
+#formula_emotional
 
 ## Meta-Regression
 # save list of moderators to include
-#terms_2 <- c("Targeted_c", "Middle_c", "High_c", "Other_report_c", "Standardized_assessment_c", "MOOSES_Rating_5_c")
+terms_2 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
 
 # format moderators into formula (an R-specifc type)
-#formula_emotional <- reformulate(termlabels = c(terms_2))
-#formula_emotional
+formula_emotional <- reformulate(termlabels = c(terms_2))
+formula_emotional
 
 # estimate a covariance matrix
 V_list_emotional <- impute_covariance_matrix(vi = full_emotional$variance,  #known correlation vector
@@ -303,15 +303,14 @@ MVfull.coef_emotional
 #terms_3 <- c("as.factor(Targeted)")
 #terms_3 <- c("as.factor(MOOSES)")
 #terms_3 <- c("as.factor(Grade)")
-#terms_3 <- c("as.factor(TypeofMeasure)")
-           
+
 # format moderators into formula (an R-specifc type)
 #formula_social <- reformulate(termlabels = c(terms_3, "-1"))
 #formula_social
 
 ## Meta-Regression
 # save list of moderators to include
-terms_3 <- c("Targeted_c", "Middle_c", "High_c", "Other_report_c", "Standardized_assessment_c")
+terms_3 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c","Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
 
 # format moderators into formula (an R-specifc type)
 formula_social <- reformulate(termlabels = c(terms_3))
@@ -363,19 +362,18 @@ MVfull.coef_social
 #terms_4 <- c("as.factor(Targeted)")
 #terms_4 <- c("as.factor(MOOSES)")
 #terms_4 <- c("as.factor(Grade)")
-terms_4 <- c("as.factor(TypeofMeasure)")
-           
+
 # format moderators into formula (an R-specifc type)
-formula_problem <- reformulate(termlabels = c(terms_4, "-1"))
-formula_problem
+#formula_problem <- reformulate(termlabels = c(terms_4, "-1"))
+#formula_problem
 
 ## Meta-Regression
 # save list of moderators to include
-#terms_4 <- c("Targeted_c", "Middle_c", "High_c", "Other_report_c", "Standardized_assessment_c", #"MOOSES_Rating_5_c")
+terms_4 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
 
 # format moderators into formula (an R-specifc type)
-#formula_problem <- reformulate(termlabels = c(terms_4))
-#formula_problem
+formula_problem <- reformulate(termlabels = c(terms_4))
+formula_problem
 
 # estimate a covariance matrix
 V_list_problem <- impute_covariance_matrix(vi = full_problem$variance,  #known correlation vector
