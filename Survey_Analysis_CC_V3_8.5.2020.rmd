@@ -1,0 +1,502 @@
+---
+title: "R Notebook"
+output:
+  word_document: default
+  html_notebook: default
+---
+
+
+
+```{r}
+##############################################################################
+##Load Full Data
+##############################################################################
+library(haven)
+# full <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_V1.dta")
+full <- read_dta("Survey_Analysis_V1.dta")
+View(full) 
+
+##Load Academic Data
+# full_academic <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Academic_V1.dta")
+full_academic <- read_dta("Survey_Analysis_Academic_V1.dta")
+View(full_academic)
+
+##Load Emotional Well-Being Data
+# full_emotional <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Emotional_V1.dta")
+full_emotional <- read_dta("Survey_Analysis_Emotional_V1.dta")
+View(full_emotional)
+
+##Load Social Relationships Data
+# full_social <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Social_V1.dta")
+full_social <- read_dta("Survey_Analysis_Social_V1.dta")
+View(full_social)
+
+##Load Problem Behaviors Data
+# full_problem <- read_dta("C:/Users/clair/Downloads/Survey_Analysis_Problem_V1.dta")
+full_problem <- read_dta("Survey_Analysis_Problem_V1.dta")
+View(full_problem)
+```
+
+```{r}
+##############################################################################
+##Meta-Analysis Packages
+##############################################################################
+test<-require(metafor)
+if (test==FALSE) {
+  install.packages("metafor")
+  require(metafor)
+}
+
+test<-require(clubSandwich)
+if (test==FALSE) {
+  install.packages("clubSandwich")
+  require(clubSandwich)
+}
+test<-require(officer)   
+if (test == FALSE) {
+  install.packages("officer")
+  require(officer)
+}
+test<-require(flextable)  
+if (test == FALSE) {
+  install.packages("flextable")
+  require(flextable)
+}
+test<-require(plyr)  #rename()
+if (test == FALSE) {
+  install.packages("plyr")
+  require(plyr)
+}
+rm(test)
+```
+
+```{r}
+#################################################################################
+# Null Model - Academic
+#################################################################################
+# estimate a covariance matrix
+V_list <- impute_covariance_matrix(vi = full_academic$variance,  #known correlation vector
+                                   cluster = full_academic$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+MVnull_academic <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list, #variance (tHIS IS WHAt CHANGES FROM HEmodel)
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_academic, #define data
+                 method="REML") #estimate variances using REML
+MVnull_academic
+```
+
+
+```{r null1, echo=TRUE}
+#t-tests of each covariate #
+MVnull.coef_academic <- coef_test(MVnull_academic,#estimation model above
+                         cluster=full_academic$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVnull.coef_academic
+```
+
+
+```{r}
+#################################################################################
+# Null Model - Emotional Well-being
+#################################################################################
+# estimate a covariance matrix
+V_list <- impute_covariance_matrix(vi = full_emotional$variance,  #known correlation vector
+                                   cluster = full_emotional$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+MVnull_emotional <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list, #variance (tHIS IS WHAt CHANGES FROM HEmodel)
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_emotional, #define data
+                 method="REML") #estimate variances using REML
+MVnull_emotional
+```
+
+```{r null2, echo=TRUE}
+#t-tests of each covariate #
+MVnull.coef_emotional <- coef_test(MVnull_emotional,#estimation model above
+                         cluster=full_emotional$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVnull.coef_emotional
+```
+
+```{r}
+#################################################################################
+# Null Model - Social Relationships
+#################################################################################
+# estimate a covariance matrix
+V_list <- impute_covariance_matrix(vi = full_social$variance,  #known correlation vector
+                                   cluster = full_social$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+MVnull_social <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list, #variance (tHIS IS WHAt CHANGES FROM HEmodel)
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_social, #define data
+                 method="REML") #estimate variances using REML
+MVnull_social
+```
+
+```{r null3, echo=TRUE}
+#t-tests of each covariate #
+MVnull.coef_social <- coef_test(MVnull_social,#estimation model above
+                         cluster=full_social$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVnull.coef_social
+```
+
+
+```{r}
+#################################################################################
+# Null Model - Problem Behaviors
+#################################################################################
+# estimate a covariance matrix
+V_list <- impute_covariance_matrix(vi = full_problem$variance,  #known correlation vector
+                                   cluster = full_problem$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+MVnull_problem <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list, #variance (tHIS IS WHAt CHANGES FROM HEmodel)
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_problem, #define data
+                 method="REML") #estimate variances using REML
+MVnull_problem
+```
+
+
+```{r null4, echo=TRUE}
+#t-tests of each covariate #
+MVnull.coef_problem <- coef_test(MVnull_problem,#estimation model above
+                         cluster=full_problem$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVnull.coef_problem
+
+### This goes in a table 
+#######################################################
+
+```
+
+
+
+```{r full1, echo=TRUE}
+#################################################################################
+# Metaregression -- Academic Model
+#################################################################################
+
+#Research Question: Are academic outcomes significantly different for MOOSES
+
+## Instructions for this section: 
+# 1. Marginal Means: Unhashtag lines 178-181 one at a time,concurrent with unhashtag of lines 184-185.
+# 2. Meta-Regression: Unhashtag line 189, concurrent with unhashtag of lines 192-193. 
+# 3. Run the rest of the block normally.
+
+## Marginal Means
+# save list of moderators to include - 
+#terms_1 <- c("as.factor(Targeted)")
+#terms_1 <- c("as.factor(MOOSES)")
+#terms_1 <- c("as.factor(Grade)")
+
+# format moderators into formula (an R-specifc type)
+#formula_academic <- reformulate(termlabels = c(terms_1, "-1"))
+#formula_academic
+
+## Meta-Regression
+# save list of moderators to include
+terms_1 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
+
+# format moderators into formula (an R-specifc type)
+formula_academic <- reformulate(termlabels = c(terms_1))
+formula_academic
+
+
+# estimate a covariance matrix
+V_list_academic <- impute_covariance_matrix(vi = full_academic$variance,  #known correlation vector
+                                   cluster = full_academic$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+
+MVfull_academic <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list_academic, #variance (ThIS IS WHAt CHANGES FROM HEmodel)
+                 mods = formula_academic, #ADD COVS HERE
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_academic, #define data
+                 method="REML") #estimate variances using REML
+MVfull_academic
+
+#######################################################
+## INTERPRETATION
+## coef test is the one that goes in the result (correct se)
+#######################################################
+
+#t-tests of each covariate #
+MVfull.coef_academic <- coef_test(MVfull_academic,#estimation model above
+                         cluster=full_academic$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVfull.coef_academic
+
+# Test for Heterogeneity
+# 95% prediction intervals
+
+  PI_upper_academic <- MVfull.coef_academic$b[1] + (1.96*sqrt(MVfull.coef_academic$sigma2[1] + MVfull.coef_academic$sigma2[2]))
+
+  PI_lower_academic <- MVfull.coef_academic$b[1] - (1.96*sqrt(MVfull.coef_academic$sigma2[1] + MVfull.coef_academic$sigma2[2]))
+```
+
+
+
+
+```{r full2, echo=TRUE}
+#################################################################################
+# Metaregression -- Emotional Well-Being Model
+#################################################################################
+
+## Instructions for this section: 
+# 1. Marginal Means: Unhashtag lines 245-247 one at a time,concurrent with unhashtag of lines 250-251.
+# 2. Meta-Regression: Unhashtag line 255, concurrent with unhashtag of lines 258-259. 
+# 3. Run the rest of the block normally.
+
+## Marginal Means
+# save list of moderators to include - 
+#terms_2 <- c("as.factor(Targeted)")
+#terms_2 <- c("as.factor(Grade)")
+
+# format moderators into formula (an R-specifc type)
+#formula_emotional <- reformulate(termlabels = c(terms_2, "-1"))
+#formula_emotional
+
+## Meta-Regression
+# save list of moderators to include
+terms_2 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
+
+# format moderators into formula (an R-specifc type)
+formula_emotional <- reformulate(termlabels = c(terms_2))
+formula_emotional
+
+# estimate a covariance matrix
+V_list_emotional <- impute_covariance_matrix(vi = full_emotional$variance,  #known correlation vector
+                                   cluster = full_emotional$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+
+MVfull_emotional <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list_emotional, #variance (ThIS IS WHAt CHANGES FROM HEmodel)
+                 mods = formula_emotional, #ADD COVS HERE
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_emotional, #define data
+                 method="REML") #estimate variances using REML
+MVfull_emotional
+
+#t-tests of each covariate #
+MVfull.coef_emotional <- coef_test(MVfull_emotional,#estimation model above
+                         cluster=full_emotional$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVfull.coef_emotional
+
+# Test for Heterogeneity
+# 95% prediction intervals
+
+  PI_upper_emotional <- MVfull.coef_emotional$b[1] + (1.96*sqrt(MVfull.coef_emotional$sigma2[1] + MVfull.coef_emotional$sigma2[2]))
+
+  PI_lower_emotional <- MVfull.coef_emotional$b[1] - (1.96*sqrt(MVfull.coef_emotional$sigma2[1] + MVfull.coef_emotional$sigma2[2]))
+```
+
+
+```{r full3, echo=TRUE}
+#################################################################################
+# Metaregression -- Social Relationships Model
+#################################################################################
+
+## Instructions for this section: 
+# 1. Marginal Means: Unhashtag lines 303-306 one at a time,concurrent with unhashtag of lines 309-310.
+# 2. Meta-Regression: Unhashtag lines 314, concurrent with unhashtag of lines 317-318. 
+# 3. Run the rest of the block normally.
+
+## Marginal Means
+# save list of moderators to include - 
+#terms_3 <- c("as.factor(Targeted)")
+#terms_3 <- c("as.factor(MOOSES)")
+#terms_3 <- c("as.factor(Grade)")
+
+# format moderators into formula (an R-specifc type)
+#formula_social <- reformulate(termlabels = c(terms_3, "-1"))
+#formula_social
+
+## Meta-Regression
+# save list of moderators to include
+terms_3 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c","Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
+
+# format moderators into formula (an R-specifc type)
+formula_social <- reformulate(termlabels = c(terms_3))
+formula_social
+
+# estimate a covariance matrix
+V_list_social <- impute_covariance_matrix(vi = full_social$variance,  #known correlation vector
+                                   cluster = full_social$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+MVfull_social <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list_social, #variance (ThIS IS WHAt CHANGES FROM HEmodel)
+                 mods = formula_social, #ADD COVS HERE
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_social, #define data
+                 method="REML") #estimate variances using REML
+
+MVfull_social
+
+#t-tests of each covariate #
+MVfull.coef_social <- coef_test(MVfull_social,#estimation model above
+                         cluster=full_social$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVfull.coef_social
+
+# Test for Heterogeneity
+# 95% prediction intervals
+
+  PI_upper_social <- MVfull.coef_social$b[1] + (1.96*sqrt(MVfull.coef_social$sigma2[1] + MVfull.coef_social$sigma2[2]))
+
+  PI_lower_social <- MVfull.coef_social$b[1] - (1.96*sqrt(MVfull.coef_social$sigma2[1] + MVfull.coef_social$sigma2[2]))
+```
+
+
+```{r full4, echo=TRUE}
+#################################################################################
+# Metaregression -- Problem Behaviors Model
+#################################################################################
+
+## Instructions for this section: 
+# 1. Marginal Means: Unhashtag lines 363-366 one at a time,concurrent with unhashtag of lines 369-370.
+# 2. Meta-Regression: Unhashtag line 374, concurrent with unhashtag of lines 377-378. 
+# 3. Run the rest of the block normally.
+
+
+## Marginal Means
+# save list of moderators to include - 
+#terms_4 <- c("as.factor(Targeted)")
+#terms_4 <- c("as.factor(MOOSES)")
+#terms_4 <- c("as.factor(Grade)")
+
+# format moderators into formula (an R-specifc type)
+#formula_problem <- reformulate(termlabels = c(terms_4, "-1"))
+#formula_problem
+
+## Meta-Regression
+# save list of moderators to include
+terms_4 <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
+
+# format moderators into formula (an R-specifc type)
+formula_problem <- reformulate(termlabels = c(terms_4))
+formula_problem
+
+# estimate a covariance matrix
+V_list_problem <- impute_covariance_matrix(vi = full_problem$variance,  #known correlation vector
+                                   cluster = full_problem$Study_ID, #study ID
+                                   r = 0.80) #assumed correlation 
+
+MVfull_problem <- rma.mv(yi=ES_adjusted, #effect size
+                 V = V_list_problem, #variance (ThIS IS WHAt CHANGES FROM HEmodel)
+                 mods = formula_problem, #ADD COVS HERE
+                 random = ~1 | Study_ID/ES_ID, #nesting structure
+                 test= "t", #use t-tests
+                 data=full_problem, #define data
+                 method="REML") #estimate variances using REML
+
+MVfull_problem
+
+
+#t-tests of each covariate #
+MVfull.coef_problem <- coef_test(MVfull_problem,#estimation model above
+                         cluster=full_problem$Study_ID, #define cluster IDs
+                         vcov = "CR2") #estimation method (CR2 is best)
+MVfull.coef_problem
+
+# Test for Heterogeneity
+# 95% prediction intervals
+
+  PI_upper_problem <- MVfull.coef_problem$b[1] + (1.96*sqrt(MVfull.coef_problem$sigma2[1] + MVfull.coef_problem$sigma2[2]))
+
+  PI_lower_problem <- MVfull.coef_problem$b[1] - (1.96*sqrt(MVfull.coef_problem$sigma2[1] + MVfull.coef_problem$sigma2[2]))
+```
+
+```{r output, echo=TRUE}
+# create report to hold output
+myreport <- officer::read_docx()
+
+makeRegressionTable <- function(coef_null, coef_mod_c, name) {
+### Formatting output
+# name <- "Academic"
+# coef_null <- MVnull.coef_academic
+# coef_mod_c <- MVfull.coef_academic
+
+# clean up the names/words
+coef_null$coef <- row.names(coef_null)
+coef_null$`Reference Group` <- ""
+coef_null <- coef_null[c("coef", "Reference Group", "beta", "SE", "tstat", "df", "p_Satt")]
+coef_null$coef[which(coef_null$coef=="intrcpt")] <- "Intercept"
+coef_null <- plyr::rename(coef_null, c("coef" = "Coefficients", "tstat" = "t", "p_Satt" = "p"))
+   
+coef_mod_c$coef <- row.names(coef_mod_c)
+coef_mod_c$`Reference Group` <- ""
+coef_mod_c <- coef_mod_c[c("coef", "Reference Group", "beta", "SE", "tstat", "df", "p_Satt")]
+coef_mod_c$coef[which(coef_mod_c$coef=="intrcpt")] <- "Intercept"
+coef_mod_c$coef <- gsub("_c", "", coef_mod_c$coef)
+coef_mod_c$coef <- gsub("_", " ", coef_mod_c$coef)
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="Targeted")] <- "Universal"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="Middle")] <- "Elementary"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="High")] <- "Elementary"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="MOOSES Rating 5")] <- "MOOSES Rating 4"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="Observation")] <- "Student Self-Report"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="Parent report")] <- "Student Self-Report"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="School record")] <- "Student Self-Report"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="Teacher report")] <- "Student Self-Report"
+coef_mod_c$`Reference Group`[which(coef_mod_c$coef=="Peer report")] <- "Student Self-Report"
+
+coef_mod_c <- plyr::rename(coef_mod_c, c("coef" = "Coefficients", "tstat" = "t", "p_Satt" = "p"))
+
+### Saving output
+### Meta-Regression
+model_null <- flextable(head(coef_null, n=nrow(coef_null)))
+model_null <- colformat_num(x = model_null, j = c("beta", "SE", "t", "df"), digits = 2)
+model_null <- colformat_num(x = model_null, j = c("p"), digits = 3)
+#model_null <- autofit(model_null)
+model_null <- add_header_lines(model_null, values = c("Null Model"), top = FALSE)
+model_null <- theme_vanilla(model_null)
+myreport <- body_add_par(x = myreport, value = paste("Meta-Regression Results: ", name, sep = ""), style = "Normal")
+myreport <- body_add_flextable(x = myreport, model_null)
+
+model_cont <- flextable(head(coef_mod_c, n=nrow(coef_mod_c)))
+model_cont <- colformat_num(x = model_cont, j = c("beta", "SE", "t", "df"), digits = 2)
+model_cont <- colformat_num(x = model_cont, j = c("p"), digits = 3)
+# model_cont <- autofit(model_cont)
+model_cont <- delete_part(model_cont, part = "header")
+model_cont <- add_header_lines(model_cont, values = c("Meta-Regression"))
+model_cont <- theme_vanilla(model_cont)
+tablenote <- c("Note. SE=standard error; df=degrees of freedom")
+model_cont <- add_footer_lines(model_cont, tablenote, )
+myreport <- body_add_flextable(x = myreport, model_cont)
+myreport <- body_add_par(x = myreport, value = "", style = "Normal")
+  
+}
+
+makeRegressionTable(MVnull.coef_academic, MVfull.coef_academic, "Academic Outcomes")
+makeRegressionTable(MVnull.coef_emotional, MVfull.coef_emotional, "Emotional Wellbeing")
+makeRegressionTable(MVnull.coef_problem, MVfull.coef_problem, "Problem Behaviors")
+makeRegressionTable(MVnull.coef_social, MVfull.coef_social, "Social Relationships")
+
+# write your report to a word doc
+file = "Output.docx"
+print(myreport, file)
+
+```
+
+
+
+
