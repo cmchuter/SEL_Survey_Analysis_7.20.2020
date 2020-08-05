@@ -426,8 +426,11 @@ MVfull.coef_problem
   PI_lower_problem <- MVfull.coef_problem$b[1] - (1.96*sqrt(MVfull.coef_problem$sigma2[1] + MVfull.coef_problem$sigma2[2]))
 ```
 
+
 ```{r output, echo=TRUE}
+#################################################################################
 # create report to hold output
+#################################################################################
 myreport <- officer::read_docx()
 
 makeRegressionTable <- function(coef_null, coef_mod_c, name) {
@@ -491,12 +494,96 @@ makeRegressionTable(MVnull.coef_emotional, MVfull.coef_emotional, "Emotional Wel
 makeRegressionTable(MVnull.coef_problem, MVfull.coef_problem, "Problem Behaviors")
 makeRegressionTable(MVnull.coef_social, MVfull.coef_social, "Social Relationships")
 
+```
+
+
+```{r means, echo=TRUE}
+#################################################################################
+# Marginal Means
+#################################################################################
+
+makeMeansTable <- function(df, name) {
+# for local testing
+# df <- full_academic
+# name <- "Academic"
+
+means <- data.frame(moderator = character(0), group = character(0), beta = numeric(0), SE = numeric(0), 
+                    tstat = numeric(0), df = numeric(0), p_Satt = numeric(0))
+
+
+## Meta-Regression
+# save list of moderators to include
+terms <- c("Targeted_c", "Middle_c", "High_c", "MOOSES_Rating_5_c", "Peer_report_c", "Teacher_report_c", "Parent_report_c", "Observation_c", "School_record_c")
+mods <- c("as.factor(MOOSES_Rating_5)", "as.factor(TypeofMeasure)")
+
+
+
+for(i in 1:length(mods)) {
+  # for local testing  
+  # i <- 1
+  col <- gsub("as.factor\\(", "", mods[i])
+  col <- gsub("\\)", "", col)
+  if(length(unique(df[[col]])) > 1) {
+    # format moderators into formula (an R-specifc type)
+    formula <- reformulate(termlabels = c(mods[i], terms, -1))
+    
+    # estimate a covariance matrix
+    V_list <- impute_covariance_matrix(vi = df$variance,  #known correlation vector
+                                       cluster = df$Study_ID, #study ID
+                                       r = 0.80) #assumed correlation 
+    
+    mod_means <- rma.mv(yi=ES_adjusted, #effect size
+                        V = V_list, #variance (ThIS IS WHAt CHANGES FROM HEmodel)
+                        mods = formula, #ADD COVS HERE
+                        random = ~1 | Study_ID/ES_ID, #nesting structure
+                        test= "t", #use t-tests
+                        data=df, #define data
+                        method="REML") #estimate variances using REML
+    mod_means
+    mod_means <- as.data.frame(coef_test(mod_means,#estimation model above
+                                         cluster=df$Study_ID, #define cluster IDs
+                                         vcov = "CR2")) #estimation method (CR2 is best)
+    
+    # limit to relevant rows (the means you are interested in)
+    mod_means$moderator <- gsub(x = mods[i], pattern = "as.factor", replacement = "")
+    mod_means$group <- rownames(mod_means)
+    rownames(mod_means) <- c()
+    mod_means <- subset(mod_means, substr(start = 1, stop = nchar(mods[i]), x = mod_means$group)== mods[i])
+    mod_means$group <- substr(x = mod_means$group, start = nchar(mods[i])+1, stop = nchar(mod_means$group))
+    means <- dplyr::bind_rows(means, mod_means)
+  }
+}
+  ##### Format output #####
+  means <- plyr::rename(means, c("tstat" = "t", "p_Satt" = "p", "beta" = "ES"))
+  means$k <- ""
+  means$n <- ""
+  means$moderator <- gsub("\\(", "", means$moderator)
+  means$moderator <- gsub("\\)", "", means$moderator)
+  means <- means[c("moderator", "group", "k", "n", "ES", "SE", "t", "df", "p")]
+
+  ##### Save output #####
+  mod_means <- flextable(head(means, n=nrow(means)))
+  mod_means <- colformat_num(x = mod_means, j = c("ES", "SE", "t", "df"), digits = 2)
+  mod_means <- colformat_num(x = mod_means, j = c("p"), digits = 3)
+  mod_means <- theme_vanilla(mod_means)
+  mod_means <- merge_v(x = mod_means, j = "moderator")
+  tablenote <- c("Note. k=number of studies; n = number of outcomes; ES=effect size; SE=standard error; df=degrees of freedom")
+  mod_means <- add_footer_lines(mod_means, tablenote, )
+
+  myreport <- body_add_par(x = myreport, value = paste("Moderator Means: ", name, sep = ""), style = "Normal")
+  myreport <- body_add_flextable(x = myreport, mod_means)
+  myreport <- body_add_par(x = myreport, value = "", style = "Normal")
+}
+
+makeMeansTable(full_academic, "Academic Outcomes")
+makeMeansTable(full_emotional, "Emotional Wellbeing")
+makeMeansTable(full_problem, "Problem Behaviors")
+makeMeansTable(full_social, "Social Relationships")
+
 # write your report to a word doc
 file = "Output.docx"
 print(myreport, file)
 
+
 ```
-
-
-
 
